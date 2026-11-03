@@ -1,0 +1,9 @@
+{
+  "$schema": "https://playground.wordpress.net/blueprint-schema.json",
+  "landingPage": "/wp-admin/options-general.php?page=hps-consent",
+  "steps": [
+    {"step": "activatePlugin", "pluginPath": "hps-consent/hps-consent.php"},
+    {"step": "runPHP", "code": "<?php require '/wordpress/wp-load.php'; update_option('hps_consent', array_merge(hps_consent_defaults(), ['enabled'=>1,'gtm_id'=>'GTM-HPSTEST1','title'=>'Your privacy choices','policy_url'=>'http://127.0.0.1:9400/privacy-policy/']));"},
+    {"step": "login", "username": "admin", "password": "password"}
+  ]
+}

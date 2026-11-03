@@ -1,0 +1,18 @@
+{
+  "name": "hps-consent",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Development and release tooling for HPS Consent",
+  "scripts": {
+    "test": "node --test tests/consent.test.cjs",
+    "build": "node scripts/build.cjs",
+    "check": "node --check assets/consent.js && node --check assets/admin.js",
+    "test:php": "node scripts/test-php.mjs"
+  },
+  "devDependencies": {
+    "@php-wasm/node": "3.1.62",
+    "@php-wasm/universal": "3.1.62",
+    "fflate": "^0.8.2",
+    "jsdom": "^26.1.0"
+  }
+}
