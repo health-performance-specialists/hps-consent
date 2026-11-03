@@ -2,7 +2,7 @@
 /**
  * Plugin Name: HPS Consent
  * Description: Reusable consent controls, Google Tag Manager Consent Mode v2, and HPS branding.
- * Version: 1.0.0
+ * Version: 1.0.1
  * Requires at least: 6.5
  * Requires PHP: 8.0
  * Author: HPS Network
@@ -13,7 +13,7 @@
  * Text Domain: hps-consent
  */
 defined('ABSPATH') || exit;
-define('HPS_CONSENT_VERSION', '1.0.0');
+define('HPS_CONSENT_VERSION', '1.0.1');
 define('HPS_CONSENT_FILE', __FILE__);
 define('HPS_CONSENT_DIR', plugin_dir_path(__FILE__));
 require_once HPS_CONSENT_DIR . 'includes/settings.php';
