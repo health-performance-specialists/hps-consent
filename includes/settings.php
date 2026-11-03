@@ -141,7 +141,6 @@ function hps_consent_settings_page(): void {
     $globals = hps_consent_colors();
     ?>
     <div class="wrap hps-admin"><h1>HPS Consent</h1><p>One reusable consent system for your WordPress websites. Version <?php echo esc_html(HPS_CONSENT_VERSION); ?></p>
-    <?php settings_errors('hps_consent'); ?>
     <div class="notice notice-warning inline"><p><strong>Before enabling:</strong> remove other GTM loaders, including header code, noscript iframes and plugins. Every non-Google tag in GTM needs consent requirements. This plugin cannot automatically control scripts installed elsewhere, server-side tracking or iframe contents.</p></div>
     <form method="post" action="options.php"><?php settings_fields('hps_consent'); ?>
     <section><h2>Tracking</h2><p><label><?php hps_consent_field('enabled', 'checkbox'); ?> Enable consent banner and GTM management</label></p>

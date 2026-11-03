@@ -10,7 +10,8 @@ A reusable, self-hosted WordPress consent plugin for HPS client websites. No pai
 4. Remove all existing GTM loaders, including Elementor header snippets, GTM noscript iframes, theme injections and other GTM plugins. Keep a rollback copy.
 5. Paste your GTM container ID or its installation snippet. The plugin extracts the ID and never executes arbitrary pasted code.
 6. Configure and test your GTM container as described below. Add your privacy policy, brand styling, text and any intentional exceptions.
-7. Enable HPS Consent, save, purge page/CDN caches, and test in a fresh browser.
+7. Exclude `hps-consent-config` and `assets/consent.js` from script-delay, async/defer and script-combining optimizers. The runtime must execute in the head before other tracking code. Do not add a GTM noscript fallback.
+8. Enable HPS Consent, save, purge page/CDN caches, and test in a fresh browser.
 
 Installing this plugin does not modify your GTM workspace. **GTM consent configuration remains required.**
 
@@ -84,9 +85,9 @@ The plugin's `Update URI` points to this public repository. WordPress checks the
 
 1. Change the version in `hps-consent.php`, `package.json` and `readme.txt`.
 2. Run `npm ci`, `npm run check`, `npm test`, `npm run test:php`, `npm run build`.
-3. Commit and push; tag the version, for example `v1.0.1`, and push the tag.
+3. To publish, change `.github/release-version` to the same version and commit it with the versioned source to `main`. This explicit marker requests a release after checks pass. A matching `v1.0.1` tag push also requests a release.
 4. The release workflow runs checks and publishes `hps-consent.zip` plus its SHA-256 checksum. The ZIP has a stable `hps-consent/` root, preserving the WordPress plugin path during updates.
-5. WordPress's scheduled update check surfaces the release (metadata cached for up to 12 hours). Administrators can use normal plugin updates and WordPress's optional auto-update controls. Branch commits do not update client sites.
+5. WordPress's scheduled update check surfaces the release (metadata cached for up to 12 hours). Administrators can use normal plugin updates and WordPress's optional auto-update controls. Ordinary branch commits do not update client sites. Existing releases are never overwritten by this workflow.
 
 Protect release publishing access: a release can deliver executable PHP to every website that installs it. Release a tested update rather than changing repository ownership casually; if the repository moves, ship an updater URL migration before removing the old location.
 
