@@ -147,3 +147,12 @@ test('CTM remembered rejection remains blocked; accepting or analytics-only allo
     const b=browser({config:{mode:'advanced',ctmBeforeChoice:true}}); b.click('accept');
     assert.equal(b.w.HPSConsent.getState().ctmAllowed,true); b.dom.window.close();
 });
+
+
+test('Tampered consent cookie cannot add categories or alter the state prototype', () => {
+    const choice=JSON.parse('{"analytics":false,"advertising":false,"functional":false,"extra":true,"__proto__":{"inheritedCategory":true}}');
+    const b=browser({cookie:remembered(choice),extra:'<iframe data-hps-src="https://blocked.test/embed" data-hps-consent="extra"></iframe>'});
+    assert.equal(b.w.HPSConsent.getState().extra,undefined);
+    assert.equal(b.w.document.querySelector('iframe').getAttribute('src'),null);
+    assert.equal(b.count(),0); b.dom.window.close();
+});
