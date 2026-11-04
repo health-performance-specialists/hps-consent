@@ -133,4 +133,4 @@ References: [Microsoft's implementation guide](https://help.ads.microsoft.com/#a
 
 ## Security
 
-See [SECURITY.md](SECURITY.md) for update trust, reporting, and operational boundaries, and the [November 2026 source review](docs/security-review-2026-11-04.md) for findings and validation limits. The proposed update hardening verifies the release asset SHA-256 before installation; it requires a digest-bearing GitHub release and fails closed if the package cannot be verified. This is integrity checking against GitHub metadata, not independent publisher signing.
+See [SECURITY.md](SECURITY.md) for update trust, reporting, and operational boundaries, and the [November 2026 source review](docs/security-review-2026-11-04.md) for findings and validation limits. From v1.0.4, the updater verifies the release asset SHA-256 before installation; it requires a digest-bearing GitHub release and fails closed if the package cannot be verified. This is integrity checking against GitHub metadata, not independent publisher signing.

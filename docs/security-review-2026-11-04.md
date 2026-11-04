@@ -1,6 +1,6 @@
 # HPS Consent security review - November 4, 2026
 
-Reviewed source baseline: commit `2e4de4537438997fde43192c33f97b8a0205ca83`, plugin v1.0.3. Changes described below are a proposed hardening patch, not a claim that deployed v1.0.3 already contains them. No live site was modified by this review.
+Reviewed source baseline: commit `2e4de4537438997fde43192c33f97b8a0205ca83`, plugin v1.0.3. The changes below are included in v1.0.4; v1.0.3 does not contain them. Production deployment is tracked separately from the original source review.
 
 ## Result and scope
 
@@ -25,13 +25,13 @@ The runtime has no custom REST, AJAX, upload, authentication, or database-query 
 - `npm audit --json` reported zero known vulnerabilities across 68 dependencies at the time of the review. Dependencies are build/test-only and are not shipped in the runtime package.
 - Build completes with the stable `hps-consent/` directory and eleven allowed files. No credentials or client-specific configuration were introduced into the repository.
 - GitHub's current v1.0.3 ZIP asset supplies a SHA-256 digest, so the stricter metadata format is compatible with the existing publisher. That release reports `immutable: false`.
-- Live WordPress download/upgrade integration and latest-PHP compatibility remain release checks; mocked contract tests do not substitute for them. The first upgrade from the old updater needs trusted manual package verification.
+- A local WordPress Playground run on PHP 8.3 passed real WP_Upgrader download-hook validation, altered-package rejection before file replacement, an unrelated plugin download, and the normal AJAX/bulk plugin upgrade lifecycle. Plugin activation and all saved settings survived. GitHub HTTP metadata/package responses were supplied as local fixtures; this was not a production upgrade or a live GitHub network-integrity test. Additional PHP versions remain compatibility checks. The first upgrade from the old updater needs trusted manual package verification.
 
 ## Remaining recommendations
 
 1. Enable immutable future releases, require reviewed pull requests/checks for main and release-related changes, protect release tags, and require strong MFA for publishing administrators. GitHub connector tools available for this review did not expose those protection settings, so they were not changed or assumed present.
 2. Consider separately managed release signing with an independently trusted public key. Hash verification alone still trusts GitHub's metadata and release publisher.
-3. Before releasing this patch, test the verified-download hook in WordPress with a newer test release, including a denied download and an unrelated plugin update. Bump the plugin/package/readme versions and release marker together after validation.
+3. The newer-package and rejected-package WordPress integration checks passed using local test fixtures. Keep repeating these checks before updater changes and bump the plugin/package/readme versions and release marker together for releases.
 4. Keep GTM publishing access restricted. GTM intentionally executes third-party JavaScript; a compromised container can affect visitors even when WordPress PHP is secure. The requested tracking exceptions remain intentional behavior.
 
 ## References
