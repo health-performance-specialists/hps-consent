@@ -46,7 +46,7 @@ Defaults are queued before the container loads. Google signals include `analytic
 - Optional confirmation before opting out: Yes confirms rejection; No returns without accepting anything.
 - Turn off opt-out confirmation for one-click rejection. **Unequal prominence and additional rejection steps can undermine valid consent in some jurisdictions.** Review the intended design for your audience; the plugin does not claim this requested flow is universally compliant.
 - Necessary / Analytics / Advertising / Optional content categories; optional categories default off.
-- Persistent floating Privacy choices control. Footer shortcode: `[hps_consent_preferences]`. Any link to `#hps-consent-settings` also opens preferences.
+- Reopen settings from footer or page links using `#hps-consent-settings`, or the `[hps_consent_preferences]` shortcode. No floating control.
 - Keyboard focus management and Escape handling, mobile layouts, and English/Spanish preference-interface labels. Banner copy and action labels are editable per site.
 
 ## Styling
@@ -70,6 +70,12 @@ The plugin does not intercept arbitrary scripts or network requests. To delay an
 ```
 
 External scripts can use `<script type="text/plain" data-hps-src="https://example.com/script.js" data-hps-consent="advertising"></script>`. Only `analytics`, `advertising` and `functional` categories are accepted. This helper does not execute inline code. Third-party iframe contents and server-side tracking need separate configuration. Nothing automatically blocks a script already inserted by another plugin.
+
+## Reopen privacy settings anywhere
+
+Use the same URL on any link or Elementor button: `#hps-consent-settings`. The plugin opens the preferences panel without granting consent. You can also link to a full page URL ending in this fragment, such as `https://example.com/privacy-policy/#hps-consent-settings`; settings open when that page loads. The shortcode `[hps_consent_preferences]` outputs the same link. No floating button is added. Keep a visible footer link on every page so visitors can revisit their choice.
+
+In the opt-out confirmation, **Yes, opt out** rejects optional categories; **No, Accept Cookies** accepts all optional categories (subject to GPC advertising restrictions). The preferences Back button still closes preferences or returns to the first banner.
 
 ## Withdrawal and storage
 

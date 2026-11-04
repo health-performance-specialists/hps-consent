@@ -27,7 +27,7 @@ function hps_consent_css(): string {
     }
     $css .= '--hps-radius:' . intval($o['radius']) . 'px;--hps-border-width:' . intval($o['border_width']) . 'px;';
     $css .= '--hps-shadow:' . ($o['shadow_enabled'] ? '0 ' . intval($o['shadow_y']) . 'px ' . intval($o['shadow_blur']) . 'px ' . intval($o['shadow_spread']) . 'px var(--hps-shadow-color)' : 'none') . ';';
-    return '#hps-consent-root,#hps-consent-revisit{' . $css . '}';
+    return '#hps-consent-root{' . $css . '}';
 }
 
 function hps_consent_head(): void {
@@ -64,14 +64,13 @@ function hps_consent_markup(): void {
         <div data-hps-panel="banner"><h2 id="hps-consent-title" tabindex="-1"><?php echo esc_html($o['title']); ?></h2>
         <p><?php echo esc_html($o['message']); ?></p><p data-hps-gpc hidden><?php echo esc_html($t['gpc']); ?></p>
         <div class="hps-actions"><button type="button" class="hps-accept" data-hps-action="accept"><?php echo esc_html($o['accept_label']); ?></button><button type="button" class="hps-link" data-hps-action="reject"><?php echo esc_html($o['reject_label']); ?></button><button type="button" class="hps-link" data-hps-action="preferences"><?php echo esc_html($o['preferences_label']); ?></button></div></div>
-        <div data-hps-panel="confirm" hidden><h2 tabindex="-1"><?php echo esc_html($o['reject_label']); ?></h2><p><?php echo esc_html($o['reject_message']); ?></p><div class="hps-actions"><button type="button" class="hps-link" data-hps-action="confirm-reject"><?php echo esc_html($o['yes_label']); ?></button><button type="button" class="hps-link" data-hps-action="back"><?php echo esc_html($o['no_label']); ?></button></div></div>
+        <div data-hps-panel="confirm" hidden><h2 tabindex="-1"><?php echo esc_html($o['reject_label']); ?></h2><p><?php echo esc_html($o['reject_message']); ?></p><div class="hps-actions"><button type="button" class="hps-link" data-hps-action="confirm-reject"><?php echo esc_html($o['yes_label']); ?></button><button type="button" class="hps-link" data-hps-action="accept"><?php echo esc_html($o['no_label']); ?></button></div></div>
         <div data-hps-panel="preferences" hidden><h2 tabindex="-1"><?php echo esc_html($t['choices']); ?></h2>
         <p data-hps-gpc hidden><?php echo esc_html($t['gpc']); ?></p><div class="hps-category"><strong><?php echo esc_html($t['necessary']); ?></strong><p><?php echo esc_html($t['necessary_text']); ?></p></div>
         <?php foreach (['analytics', 'advertising', 'functional'] as $category) : ?><div class="hps-category"><label><input type="checkbox" data-hps-category="<?php echo esc_attr($category); ?>"> <?php echo esc_html($t[$category]); ?></label><p><?php echo esc_html($t[$category . '_text']); ?></p></div><?php endforeach; ?>
         <div class="hps-actions"><button type="button" class="hps-accept" data-hps-action="save"><?php echo esc_html($t['save']); ?></button><button type="button" class="hps-link" data-hps-action="back"><?php echo esc_html($t['back']); ?></button></div></div>
         <?php if ($o['policy_url']) : ?><a class="hps-policy" href="<?php echo esc_url($o['policy_url']); ?>"><?php echo esc_html($t['policy']); ?></a><?php endif; ?>
     </div>
-    <button id="hps-consent-revisit" type="button" hidden><?php echo esc_html($t['choices']); ?></button>
     <?php
 }
 

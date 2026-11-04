@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const {JSDOM} = require('jsdom');
 const script = fs.readFileSync(path.join(__dirname, '../assets/consent.js'), 'utf8');
-const markup = `<div id="hps-consent-root" hidden><div data-hps-panel="banner"><h2 id="hps-consent-title" tabindex="-1">Privacy</h2><button data-hps-action="accept">Accept</button><button data-hps-action="reject">Opt out</button><button data-hps-action="preferences">Customize</button><p data-hps-gpc hidden>GPC</p></div><div data-hps-panel="confirm" hidden><h2 tabindex="-1">Confirm</h2><button data-hps-action="confirm-reject">Yes</button><button data-hps-action="back">No</button></div><div data-hps-panel="preferences" hidden><h2 tabindex="-1">Preferences</h2><input type="checkbox" data-hps-category="analytics"><input type="checkbox" data-hps-category="advertising"><input type="checkbox" data-hps-category="functional"><button data-hps-action="save">Save</button><button data-hps-action="back">Back</button></div></div><button id="hps-consent-revisit" hidden>Privacy choices</button><a href="#hps-consent-settings">Footer privacy</a>`;
+const markup = `<div id="hps-consent-root" hidden><div data-hps-panel="banner"><h2 id="hps-consent-title" tabindex="-1">Privacy</h2><button data-hps-action="accept">Accept</button><button data-hps-action="reject">Opt out</button><button data-hps-action="preferences">Customize</button><p data-hps-gpc hidden>GPC</p></div><div data-hps-panel="confirm" hidden><h2 tabindex="-1">Confirm</h2><button data-hps-action="confirm-reject">Yes</button><button data-hps-action="accept">No, Accept Cookies</button></div><div data-hps-panel="preferences" hidden><h2 tabindex="-1">Preferences</h2><input type="checkbox" data-hps-category="analytics"><input type="checkbox" data-hps-category="advertising"><input type="checkbox" data-hps-category="functional"><button data-hps-action="save">Save</button><button data-hps-action="back">Back</button></div></div><a href="#hps-consent-settings">Footer privacy</a>`;
 function browser(options = {}) {
     const dom = new JSDOM('<!doctype html><html><head></head><body>' + markup + (options.extra || '') + '</body></html>', {url: options.url || 'https://clinic.test/service/', runScripts: 'outside-only'});
     const w = dom.window;
@@ -33,11 +33,14 @@ test('Accept loads exactly one GTM, updates consent before loading, persists cho
     assert.equal(b.commands().at(-1)[2].ad_personalization, 'granted'); assert.match(b.w.document.cookie, /hps_consent_v1=/);
     assert.equal(b.w.document.querySelector('#hps-consent-root').hidden, true); b.dom.window.close();
 });
-test('Requested opt-out flow: confirmation, No returns, Yes rejects without GTM', () => {
-    const b = browser(); b.click('reject'); assert.equal(b.w.document.querySelector('[data-hps-panel="confirm"]').hidden, false);
-    assert.equal(b.count(), 0); b.click('back'); assert.equal(b.w.document.querySelector('[data-hps-panel="banner"]').hidden, false);
-    b.click('reject'); b.click('confirm-reject'); assert.equal(b.count(), 0); assert.equal(b.commands().at(-1)[2].ad_storage, 'denied'); b.dom.window.close();
+test('Opt-out confirmation: No accepts all, Yes rejects without GTM', () => {
+    const a = browser(); a.click('reject');
+    a.w.document.querySelector('[data-hps-panel="confirm"] [data-hps-action="accept"]').click();
+    assert.equal(a.count(), 1); assert.equal(a.commands().at(-1)[2].ad_storage, 'granted'); a.dom.window.close();
+    const b = browser(); b.click('reject'); assert.equal(b.count(), 0); b.click('confirm-reject');
+    assert.equal(b.count(), 0); assert.equal(b.commands().at(-1)[2].ad_storage, 'denied'); b.dom.window.close();
 });
+
 test('One-click rejection is available', () => {
     const b = browser({config: {confirmReject: false}}); b.click('reject'); assert.equal(b.count(), 0); assert.equal(b.w.document.querySelector('#hps-consent-root').hidden, true); b.dom.window.close();
 });
@@ -95,4 +98,19 @@ test('Never releases javascript: embedded sources or unknown categories', () => 
 test('Script is idempotent and public state cannot mutate internal consent', () => {
     const b = browser(); b.w.HPSConsent.getState().advertising = true; assert.equal(b.w.HPSConsent.getState().advertising, false);
     const count = b.w.dataLayer.length; b.w.eval(script); assert.equal(b.w.dataLayer.length, count); b.dom.window.close();
+});
+
+test('Shared settings link works without a floating button and accepts absolute same-page links', () => {
+    const b = browser({cookie: remembered({analytics: false, advertising: false, functional: false})});
+    assert.equal(b.w.document.getElementById('hps-consent-revisit'), null);
+    const link=b.w.document.querySelector('a'); link.href='https://clinic.test/service/#hps-consent-settings'; link.click();
+    assert.equal(b.w.document.querySelector('[data-hps-panel="preferences"]').hidden, false);
+    assert.equal(b.count(),0); b.dom.window.close();
+});
+test('Settings URL opens on arrival and on a later hash change without granting consent', () => {
+    const a=browser({url:'https://clinic.test/service/#hps-consent-settings'});
+    assert.equal(a.w.document.querySelector('[data-hps-panel="preferences"]').hidden,false); assert.equal(a.count(),0); a.dom.window.close();
+    const b=browser({cookie:remembered({analytics:false,advertising:false,functional:false})});
+    b.w.location.hash='#hps-consent-settings'; b.w.dispatchEvent(new b.w.HashChangeEvent('hashchange'));
+    assert.equal(b.w.document.querySelector('[data-hps-panel="preferences"]').hidden,false); assert.equal(b.count(),0); b.dom.window.close();
 });

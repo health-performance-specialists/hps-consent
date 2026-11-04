@@ -5,7 +5,7 @@
     var config = w.HPSConsentConfig;
     var blank = function () { return {analytics: false, advertising: false, functional: false}; };
     var gpc = config.gpc && w.navigator.globalPrivacyControl === true;
-    var current = blank(), stored = null, loaded = false, root, revisit, returnFocus;
+    var current = blank(), stored = null, loaded = false, root, returnFocus;
     var exceptions = Array.isArray(config.exceptions) ? config.exceptions : [];
     function normal(path) {
         try { path = decodeURI(path); } catch (ignore) { /* malformed paths remain literal */ }
@@ -119,7 +119,6 @@
     }
     function hide() {
         if (root) root.hidden = true;
-        if (revisit) revisit.hidden = bypass;
         if (returnFocus && returnFocus.isConnected) returnFocus.focus();
     }
     function show(panel, focus) {
@@ -157,14 +156,12 @@
     }
     function init() {
         root = d.getElementById('hps-consent-root');
-        revisit = d.getElementById('hps-consent-revisit');
         releaseContent();
-        if (!root || !revisit) return;
-        if (bypass) { root.hidden = true; revisit.hidden = true; return; }
+        if (!root) return;
+        if (bypass) { root.hidden = true; return; }
         root.querySelectorAll('[data-hps-gpc]').forEach(function (p) { p.hidden = !gpc; });
         var ads = root.querySelector('[data-hps-category="advertising"]');
         if (ads && gpc) { ads.disabled = true; ads.checked = false; }
-        revisit.hidden = false;
         if (!stored) show('banner', false);
         root.addEventListener('click', function (event) {
             var button = event.target.closest('[data-hps-action]');
@@ -184,11 +181,20 @@
             }
         });
         root.addEventListener('keydown', function (event) { if (event.key === 'Escape') { if (stored) hide(); else show('banner', true); } });
-        revisit.addEventListener('click', open);
         d.addEventListener('click', function (event) {
-            var link = event.target.closest('a[href="#hps-consent-settings"]');
-            if (link) { event.preventDefault(); open(); }
+            if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+            var link = event.target.closest('a[href]');
+            if (!link || link.hasAttribute('download') || (link.target && link.target !== '_self')) return;
+            try {
+                var url = new URL(link.href, w.location.href);
+                if (url.origin === w.location.origin && url.pathname === w.location.pathname && url.search === w.location.search && url.hash === '#hps-consent-settings') {
+                    event.preventDefault(); open();
+                }
+            } catch (ignore) { /* Other links retain normal navigation. */ }
         });
+        function openFromURL() { if (w.location.hash === '#hps-consent-settings') open(); }
+        w.addEventListener('hashchange', openFromURL);
+        openFromURL();
     }
     if (gpc && stored && stored.advertising) cleanup(stored);
     w.HPSConsent = Object.freeze({open: open, getState: function () { return Object.assign({}, current, {gpc: gpc, bypass: bypass, mode: config.mode, gtmLoaded: loaded}); }});
