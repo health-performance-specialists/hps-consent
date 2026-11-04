@@ -25,6 +25,7 @@ add_action('admin_enqueue_scripts', 'hps_consent_admin_assets');
 add_action('wp_head', 'hps_consent_head', -999);
 add_action('wp_footer', 'hps_consent_markup', 99);
 add_filter('update_plugins_github.com', 'hps_consent_update', 10, 4);
+add_filter('upgrader_pre_download', 'hps_consent_verify_download', 99, 4);
 add_filter('plugins_api', 'hps_consent_plugin_info', 10, 3);
 add_filter('plugin_action_links_' . plugin_basename(__FILE__), static function ($links) {
     array_unshift($links, '<a href="' . esc_url(admin_url('options-general.php?page=hps-consent')) . '">' . esc_html__('Settings', 'hps-consent') . '</a>');

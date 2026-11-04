@@ -27,7 +27,8 @@
             if (value.schema !== 1 || value.version !== config.version || !Number.isFinite(value.expires) || value.expires <= Date.now() ||
                 value.expires > Date.now() + 366 * 86400000 || !value.choice) return null;
             if (['analytics', 'advertising', 'functional'].some(function (key) { return typeof value.choice[key] !== 'boolean'; })) return null;
-            return value.choice;
+            // The cookie is visitor-controlled. Never merge extra keys or __proto__ into runtime state.
+            return {analytics: value.choice.analytics, advertising: value.choice.advertising, functional: value.choice.functional};
         } catch (ignore) { return null; }
     }
     stored = read();

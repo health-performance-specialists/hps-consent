@@ -91,7 +91,7 @@ The plugin's `Update URI` points to this public repository. WordPress checks the
 
 1. Change the version in `hps-consent.php`, `package.json` and `readme.txt`.
 2. Run `npm ci`, `npm run check`, `npm test`, `npm run test:php`, `npm run build`.
-3. To publish, change `.github/release-version` to the same version and commit it with the versioned source to `main`. This explicit marker requests a release after checks pass. A matching `v1.0.1` tag push also requests a release.
+3. To publish, change `.github/release-version` to the same version and commit it with the versioned source to `main`. This explicit marker requests a release after checks pass. Automated releases are published from `main` only; a version-tag push alone does not publish a release.
 4. The release workflow runs checks and publishes `hps-consent.zip` plus its SHA-256 checksum. The ZIP has a stable `hps-consent/` root, preserving the WordPress plugin path during updates.
 5. WordPress's scheduled update check surfaces the release (metadata cached for up to 12 hours). Administrators can use normal plugin updates and WordPress's optional auto-update controls. Ordinary branch commits do not update client sites. Existing releases are never overwritten by this workflow.
 
@@ -130,3 +130,7 @@ For a reviewed **Advanced-mode** container, replace its existing UET base tag wi
 Keep Clarity disabled separately in Microsoft Advertising; UET consent is not a Clarity opt-out. Test fresh choice, remembered rejection, acceptance and withdrawal. Denied UET pageviews should have `asc=D`, no persistent `sid`/`vid`/`msclkid` parameters, and no new first-party UET cookies. Accepted pageviews should have `asc=G`. Microsoft may use a separate cookieless endpoint. Cookieless does not mean no data transmission or exemption from applicable privacy obligations. Disclose both pre-choice and post-rejection measurement in the banner and policy. Do not transmit patient answers or contact details in custom UET events.
 
 References: [Microsoft's implementation guide](https://help.ads.microsoft.com/#apex/ads/en/60119/1) and [Advanced-mode guidance](https://www.about.ads.microsoft.com/en/blog/post/february-2026/advanced-consent-mode-preserving-accurate-measurement-while-respecting-user-privacy).
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for update trust, reporting, and operational boundaries, and the [November 2026 source review](docs/security-review-2026-11-04.md) for findings and validation limits. The proposed update hardening verifies the release asset SHA-256 before installation; it requires a digest-bearing GitHub release and fails closed if the package cannot be verified. This is integrity checking against GitHub metadata, not independent publisher signing.
