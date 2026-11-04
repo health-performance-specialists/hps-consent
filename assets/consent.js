@@ -50,9 +50,12 @@
     gtag('consent', 'default', googleState());
     gtag('set', 'ads_data_redaction', true);
     gtag('set', 'url_passthrough', false);
+    function ctmAllowed() {
+        return current.analytics || (config.mode === 'advanced' && config.ctmBeforeChoice === true && !stored);
+    }
     function publish(source) {
         var payload = {event: 'hps_consent_update', hps_analytics: current.analytics, hps_advertising: current.advertising,
-            hps_functional: current.functional, hps_consent_source: source, hps_consent_bypass: bypass, hps_gpc: gpc};
+            hps_functional: current.functional, hps_ctm_allowed: ctmAllowed(), hps_consent_source: source, hps_consent_bypass: bypass, hps_gpc: gpc};
         w.dataLayer.push(payload);
         d.dispatchEvent(new w.CustomEvent('hps:consent', {detail: Object.assign({}, payload)}));
     }
@@ -81,10 +84,11 @@
     // Consent state must be queued before gtm.js / page-view triggers.
     publish(bypass ? 'page-exception' : stored ? 'remembered' : 'default');
     maybeLoad();
-    function cleanup(previous) {
+    function cleanup(previous, previousCTM) {
         var patterns = [];
         if (previous.analytics && !current.analytics) patterns.push(/^_ga($|_)/, /^_gid$/, /^_gat/);
         if (previous.advertising && !current.advertising) patterns.push(/^_gcl_/, /^_fbp$/, /^_fbc$/, /^_uet/);
+        if (previousCTM && !ctmAllowed()) patterns.push(/^__ctm/, /^_ctm/, /^:ct\d+$/);
         if (!patterns.length) return;
         var domains = [''];
         var host = w.location.hostname.split('.');
@@ -133,7 +137,7 @@
     }
     function save(choice, source) {
         if (bypass) return;
-        var previous = Object.assign({}, current);
+        var previous = Object.assign({}, current), previousCTM = ctmAllowed();
         current = {analytics: choice.analytics === true, advertising: !gpc && choice.advertising === true, functional: choice.functional === true};
         var days = Math.max(1, Math.min(365, Number(config.days) || 180));
         var value = {schema: 1, version: config.version, choice: current, expires: Date.now() + days * 86400000};
@@ -141,12 +145,12 @@
         stored = Object.assign({}, current);
         gtag('consent', 'update', googleState());
         publish(source);
-        cleanup(previous);
+        cleanup(previous, previousCTM);
         maybeLoad();
         releaseContent();
         hide();
         // Already-running vendor scripts cannot be unloaded. A reload removes their listeners.
-        if (Object.keys(previous).some(function (key) { return previous[key] && !current[key]; })) w.location.reload();
+        if ((previousCTM && !ctmAllowed()) || Object.keys(previous).some(function (key) { return previous[key] && !current[key]; })) w.location.reload();
     }
     function open() {
         if (!root || bypass) return;
@@ -197,6 +201,6 @@
         openFromURL();
     }
     if (gpc && stored && stored.advertising) cleanup(stored);
-    w.HPSConsent = Object.freeze({open: open, getState: function () { return Object.assign({}, current, {gpc: gpc, bypass: bypass, mode: config.mode, gtmLoaded: loaded}); }});
+    w.HPSConsent = Object.freeze({open: open, getState: function () { return Object.assign({}, current, {gpc: gpc, bypass: bypass, mode: config.mode, hasChoice: !!stored, ctmAllowed: ctmAllowed(), gtmLoaded: loaded}); }});
     if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', init, {once: true}); else init();
 })(window, document);

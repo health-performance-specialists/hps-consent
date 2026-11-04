@@ -3,11 +3,14 @@ const {test} = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const {JSDOM} = require('jsdom');
+const {JSDOM, VirtualConsole} = require('jsdom');
 const script = fs.readFileSync(path.join(__dirname, '../assets/consent.js'), 'utf8');
 const markup = `<div id="hps-consent-root" hidden><div data-hps-panel="banner"><h2 id="hps-consent-title" tabindex="-1">Privacy</h2><button data-hps-action="accept">Accept</button><button data-hps-action="reject">Opt out</button><button data-hps-action="preferences">Customize</button><p data-hps-gpc hidden>GPC</p></div><div data-hps-panel="confirm" hidden><h2 tabindex="-1">Confirm</h2><button data-hps-action="confirm-reject">Yes</button><button data-hps-action="accept">No, Accept Cookies</button></div><div data-hps-panel="preferences" hidden><h2 tabindex="-1">Preferences</h2><input type="checkbox" data-hps-category="analytics"><input type="checkbox" data-hps-category="advertising"><input type="checkbox" data-hps-category="functional"><button data-hps-action="save">Save</button><button data-hps-action="back">Back</button></div></div><a href="#hps-consent-settings">Footer privacy</a>`;
 function browser(options = {}) {
-    const dom = new JSDOM('<!doctype html><html><head></head><body>' + markup + (options.extra || '') + '</body></html>', {url: options.url || 'https://clinic.test/service/', runScripts: 'outside-only'});
+    let reloads = 0;
+    const virtualConsole = new VirtualConsole();
+    virtualConsole.on('jsdomError', error => { if (/Not implemented: navigation/.test(error.message)) reloads++; else throw error; });
+    const dom = new JSDOM('<!doctype html><html><head></head><body>' + markup + (options.extra || '') + '</body></html>', {url: options.url || 'https://clinic.test/service/', runScripts: 'outside-only', virtualConsole});
     const w = dom.window;
     w.HPSConsentConfig = Object.assign({id: 'GTM-TEST123', mode: 'basic', cookie: 'hps_consent_v1', version: '1', days: 180, exceptions: [], gpc: true, confirmReject: true}, options.config);
     if (options.gpc) Object.defineProperty(w.navigator, 'globalPrivacyControl', {value: true});
@@ -17,7 +20,7 @@ function browser(options = {}) {
     const click = (action) => w.document.querySelector('[data-hps-action="' + action + '"]').click();
     const commands = () => w.dataLayer.filter(e => e[0] === 'consent');
     const count = () => w.document.querySelectorAll('script[src*="googletagmanager.com/gtm.js"]').length;
-    return {w, dom, click, commands, count};
+    return {w, dom, click, commands, count, reloads: () => reloads};
 }
 function remembered(choice, overrides = {}) { return Object.assign({schema: 1, version: '1', expires: Date.now() + 86400000, choice}, overrides); }
 
@@ -113,4 +116,34 @@ test('Settings URL opens on arrival and on a later hash change without granting 
     const b=browser({cookie:remembered({analytics:false,advertising:false,functional:false})});
     b.w.location.hash='#hps-consent-settings'; b.w.dispatchEvent(new b.w.HashChangeEvent('hashchange'));
     assert.equal(b.w.document.querySelector('[data-hps-panel="preferences"]').hidden,false); assert.equal(b.count(),0); b.dom.window.close();
+});
+
+
+test('CTM pre-choice exception is Advanced-only and revokes on explicit analytics denial', () => {
+    const b = browser({config: {mode: 'advanced', ctmBeforeChoice: true}});
+    assert.equal(b.w.HPSConsent.getState().ctmAllowed, true);
+    assert.equal(b.w.HPSConsent.getState().hasChoice, false);
+    assert.equal(b.w.dataLayer.find(e => e.event === 'hps_consent_update').hps_ctm_allowed, true);
+    b.w.document.cookie = '__ctmid=example; Path=/';
+    b.click('confirm-reject');
+    assert.equal(b.w.HPSConsent.getState().ctmAllowed, false);
+    assert.equal(b.w.HPSConsent.getState().hasChoice, true);
+    assert.equal(b.w.dataLayer.filter(e => e.event === 'hps_consent_update').at(-1).hps_ctm_allowed, false);
+    assert.doesNotMatch(b.w.document.cookie, /__ctmid=/);
+    assert.equal(b.reloads(), 1, 'first explicit denial must reload even though Google defaults were already denied');
+    b.dom.window.close();
+    for (const config of [{mode:'basic',ctmBeforeChoice:true},{mode:'advanced',ctmBeforeChoice:false}]) {
+        const a=browser({config}); assert.equal(a.w.HPSConsent.getState().ctmAllowed,false); a.dom.window.close();
+    }
+});
+
+test('CTM remembered rejection remains blocked; accepting or analytics-only allows it', () => {
+    for (const analytics of [false,true]) {
+        const b=browser({config:{mode:'advanced',ctmBeforeChoice:true},cookie:remembered({analytics,advertising:false,functional:false})});
+        assert.equal(b.w.HPSConsent.getState().ctmAllowed,analytics);
+        assert.equal(b.count(),1);
+        b.dom.window.close();
+    }
+    const b=browser({config:{mode:'advanced',ctmBeforeChoice:true}}); b.click('accept');
+    assert.equal(b.w.HPSConsent.getState().ctmAllowed,true); b.dom.window.close();
 });

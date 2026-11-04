@@ -1,6 +1,6 @@
 {
   "name": "hps-consent",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": true,
   "description": "Development and release tooling for HPS Consent",
   "scripts": {

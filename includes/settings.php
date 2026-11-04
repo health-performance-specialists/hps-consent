@@ -3,7 +3,7 @@ defined('ABSPATH') || exit;
 
 function hps_consent_defaults(): array {
     return [
-        'enabled' => 0, 'gtm_id' => '', 'mode' => 'basic', 'container_reviewed' => 0,
+        'enabled' => 0, 'gtm_id' => '', 'mode' => 'basic', 'container_reviewed' => 0, 'ctm_before_choice' => 0,
         'policy_url' => '', 'excluded_urls' => '', 'consent_version' => '1', 'days' => 180,
         'confirm_reject' => 1, 'respect_gpc' => 1, 'language' => 'en',
         'title' => 'Your privacy choices',
@@ -48,7 +48,7 @@ function hps_consent_sanitize($input): array {
     $input = is_array($input) ? $input : [];
     $old = hps_consent_options();
     $out = hps_consent_defaults();
-    foreach (['enabled', 'confirm_reject', 'respect_gpc', 'shadow_enabled', 'container_reviewed'] as $key) {
+    foreach (['enabled', 'confirm_reject', 'respect_gpc', 'shadow_enabled', 'container_reviewed', 'ctm_before_choice'] as $key) {
         $out[$key] = empty($input[$key]) ? 0 : 1;
     }
     $raw = trim((string) ($input['gtm_id'] ?? ''));
@@ -146,8 +146,9 @@ function hps_consent_settings_page(): void {
     <section><h2>Tracking</h2><p><label><?php hps_consent_field('enabled', 'checkbox'); ?> Enable consent banner and GTM management</label></p>
     <label for="gtm_id">GTM container ID or installation code</label><?php hps_consent_field('gtm_id', 'textarea'); ?><p class="description">Paste GTM-XXXXXXX or the Google installation snippet. Only the container ID is saved; arbitrary JavaScript is never executed.</p>
     <p><label for="mode">Consent mode</label><select id="mode" name="hps_consent[mode]"><option value="basic" <?php selected($o['mode'], 'basic'); ?>>Basic — block GTM until consent</option><option value="advanced" <?php selected($o['mode'], 'advanced'); ?>>Advanced — load GTM with denied defaults</option></select></p>
-    <p>Advanced mode permits Google cookieless measurement before acceptance. Both modes require category gates for third-party tags.</p>
+    <p>Advanced mode permits Google cookieless measurement before acceptance. Google can continue cookieless pings after rejection. Third-party tags need separate gates.</p>
     <p><label><?php hps_consent_field('container_reviewed', 'checkbox'); ?> I have reviewed all GTM tags, consent requirements and consent-update triggers.</label></p>
+    <p><label><?php hps_consent_field('ctm_before_choice', 'checkbox'); ?> In Advanced mode, allow CallTrackingMetrics before a visitor chooses</label></p><p class="description">CTM may use cookies and collect attribution before a choice. It stops after analytics is explicitly declined. Configure its GTM trigger with hps_ctm_allowed, not the Google analytics_storage gate. Basic mode always waits for analytics acceptance. This setting does not load CTM by itself.</p>
     <p><label><?php hps_consent_field('respect_gpc', 'checkbox'); ?> Honor Global Privacy Control (blocks advertising consent, including on exception pages)</label></p>
     <p><label for="days">Remember choices (days)</label><?php hps_consent_field('days', 'number', 'min="1" max="365"'); ?></p>
     <p><label for="consent_version">Consent policy version</label><?php hps_consent_field('consent_version'); ?> <span class="description">Change this value to request fresh consent.</span></p>

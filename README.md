@@ -43,7 +43,7 @@ Defaults are queued before the container loads. Google signals include `analytic
 ## Visitor experience
 
 - Large Accept button; readable, underlined, keyboard-accessible Opt out and Customize controls.
-- Optional confirmation before opting out: Yes confirms rejection; No returns without accepting anything.
+- Optional confirmation before opting out: Yes confirms rejection; No, Accept Cookies accepts optional categories subject to GPC.
 - Turn off opt-out confirmation for one-click rejection. **Unequal prominence and additional rejection steps can undermine valid consent in some jurisdictions.** Review the intended design for your audience; the plugin does not claim this requested flow is universally compliant.
 - Necessary / Analytics / Advertising / Optional content categories; optional categories default off.
 - Reopen settings from footer or page links using `#hps-consent-settings`, or the `[hps_consent_preferences]` shortcode. No floating control.
@@ -112,3 +112,11 @@ npm run build
 Tests cover Basic and Advanced mode, consent ordering, opt-out confirmation, granular choices, GPC, exceptions, cookie expiry/versioning, duplicate loading, optional embeds, sanitizer injection boundaries and public-release validation. A PHP contract harness is included; it is not a replacement for WordPress staging and Tag Assistant testing on each client container.
 
 No client IDs, account credentials, patient information or site-specific configuration are committed to this repository. License: GPL-2.0-or-later.
+
+## Optional CTM pre-choice operation (Advanced only)
+
+Enable the explicit CTM-before-choice setting only when intentional. Normal CTM tracking can use cookies; this is not cookieless tracking or a Google consent grant. In GTM create a Version 2 Data Layer Variable for `hps_ctm_allowed` (default false), and fire the CTM base tag once per page on `hps_consent_update` filtered to that variable equal to true. Remove additional Google consent requirements from that CTM tag only; retain category gates on other vendors. Do not use an unfiltered consent-update trigger.
+
+A remembered analytics denial blocks CTM. Saving preferences with analytics off or confirming rejection revokes CTM and reloads, including when CTM started before the first choice. Known accessible first-party CTM cookies are removed where possible; third-party/HttpOnly storage and data already sent cannot be recalled. Keep ordinary forms and fallback telephone numbers functional without CTM. Disclose the pre-choice behavior and Google Advanced cookieless pings in the site policy and banner. Existing consent records are honored; changing mode does not erase a rejection.
+
+`HPSConsent.getState()` also reports `hasChoice` and `ctmAllowed`. The `hps_ctm_allowed` payload never grants Google's analytics or advertising consent.

@@ -7,6 +7,7 @@ function hps_consent_config(): array {
         'id' => $o['gtm_id'], 'mode' => $o['mode'], 'version' => $o['consent_version'],
         'days' => $o['days'], 'gpc' => (bool) $o['respect_gpc'], 'confirmReject' => (bool) $o['confirm_reject'],
         'exceptions' => array_values(array_filter(explode("\n", $o['excluded_urls']))),
+        'ctmBeforeChoice' => (bool) $o['ctm_before_choice'],
         'cookie' => 'hps_consent_v1', 'language' => $o['language'],
     ];
     return $config;
