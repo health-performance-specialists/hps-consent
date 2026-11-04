@@ -1,0 +1,28 @@
+<!-- GTM Custom HTML example. Replace tagId with this website's Microsoft UET ID. -->
+<script>
+(function(w,d){
+  var tagId='REPLACE_WITH_YOUR_UET_TAG_ID';
+  if(!/^\d+$/.test(tagId) || w.__hpsMicrosoftUET) return;
+  w.__hpsMicrosoftUET = true;
+  w.uetq = w.uetq || [];
+  function clearBackupIds(){
+    try { ['_uetvid','_uetvid_exp','_uetsid','_uetsid_exp','_uetmsclkid','_uetmsclkid_exp'].forEach(function(key){w.localStorage.removeItem(key);}); } catch(ignore) {}
+  }
+  w.uetq.push('consent','default',{ad_storage:'denied'});
+  var state = w.HPSConsent && w.HPSConsent.getState ? w.HPSConsent.getState() : null;
+  if(state && state.advertising === true) w.uetq.push('consent','update',{ad_storage:'granted'});
+  else clearBackupIds();
+  d.addEventListener('hps:consent',function(event){
+    var allowed=event.detail && event.detail.hps_advertising === true;
+    w.uetq.push('consent','update',{ad_storage:allowed ? 'granted' : 'denied'});
+    if(!allowed) clearBackupIds();
+  });
+  var script=d.createElement('script');
+  script.src='https://bat.bing.com/bat.js'; script.async=true;
+  script.onload=function(){
+    var options={ti:tagId,enableAutoSpaTracking:true,enableAutoConsent:false};
+    options.q=w.uetq; w.uetq=new w.UET(options); w.uetq.push('pageLoad');
+  };
+  d.head.appendChild(script);
+})(window,document);
+</script>
