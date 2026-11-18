@@ -10,7 +10,7 @@
     "test:php": "node scripts/test-php.mjs"
   },
   "devDependencies": {
-    "@php-wasm/node": "3.1.62",
+    "@php-wasm/node": "3.1.64",
     "@php-wasm/universal": "3.1.62",
     "fflate": "^0.8.2",
     "jsdom": "^26.1.0"
